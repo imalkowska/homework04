@@ -1,7 +1,7 @@
 
 import sqlite3
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 
 app = FastAPI()
 
@@ -30,7 +30,7 @@ async def shutdown():
 # Zadanie 1
 
 @app.get("/tracks")
-async def root(page:int = 0, per_page:int = 10):
+async def get_tracks(page:int = 0, per_page:int = 10):
     ogr = page * per_page
     app.db_connection.row_factory = sqlite3.Row
     tracks = app.db_connection.execute(f"SELECT * FROM tracks order by trackid LIMIT {per_page} OFFSET {ogr}").fetchall()
@@ -38,8 +38,14 @@ async def root(page:int = 0, per_page:int = 10):
 
 
 
-# @app.get("/")
-# async def root():
-#     cursor = app.db_connection.cursor()
-#     ....
-#     return ...
+# Zadanie 2 
+
+@app.get("/tracks/composers/")
+async def get_composers(response: Response, composer_name:str):
+    app.db_connection.row_factory =  lambda cursor, x: x[0]
+    composers = app.db_connection.execute(f"select b.Title from artists a left join albums b using(artistid) WHERE a.Name = '{composer_name}' ORDER by b.Title ").fetchall()
+    if composers!=[]:
+        return composers
+    else:
+        response.status_code = 404
+        return {"detail":{"error": "Brak wykonawcy"}}
