@@ -43,7 +43,15 @@ async def get_tracks(page:int = 0, per_page:int = 10):
 @app.get("/tracks/composers/")
 async def get_composers(response: Response, composer_name:str):
     app.db_connection.row_factory =  lambda cursor, x: x[0]
-    composers = app.db_connection.execute(f"select b.Title from artists a left join albums b using(artistid) WHERE a.Name = '{composer_name}' ORDER by b.Title ").fetchall()
+    composers = app.db_connection.execute(f"""select distinct c.Name 
+from artists a 
+left join albums b 
+using(artistid)
+left join tracks c 
+using(albumid)
+WHERE a.Name = '{composer_name}'
+ORDER by c.Name
+""").fetchall()
     if composers!=[]:
         return composers
     else:
