@@ -2,6 +2,14 @@
 import sqlite3
 
 from fastapi import FastAPI, Response
+from pydantic import BaseModel
+
+
+class Album(BaseModel):
+    title: str
+    artist_id: int
+
+
 
 app = FastAPI()
 
@@ -48,4 +56,38 @@ async def get_composers(response: Response, composer_name:str):
         return composers
     else:
         response.status_code = 404
-        return {"detail":{"error": "Brak wykonawcy"}}
+        return {"detail":{"error": "Brak kompozytora"}}
+
+
+
+# Zadanie 3
+
+@app.post("/albums")
+async def album_add(response: Response, album: Album):
+    app.db_connection.row_factory =  lambda cursor, x: x[0]
+    cursor0 = app.db_connection.execute(f"select name from artists where ArtistId = {album.artist_id}").fetchone()
+    if cursor0 is None:
+        response.status_code = 404
+        return {"detail":{"error": "Brak artysty"}}   
+    else:
+        cursor = app.db_connection.execute(f"INSERT INTO albums (title, artistid) VALUES ('{album.title}', {album.artist_id})", )
+        app.db_connection.commit()
+        response.status_code = 201
+        return {
+            "album_id": cursor.lastrowid,
+            "title": album.title,
+            "artist_id": album.artist_id
+        }
+
+
+
+@app.get("/albums/{album_id}")
+async def album_get(response: Response, album_id:int):
+    app.db_connection.row_factory =  sqlite3.Row
+    cursor1 = app.db_connection.execute(f"select * from albums where albumid = {album_id}").fetchone()
+    if cursor1 is None:
+        response.status_code = 404
+        return {"detail":{"error": "Brak albumu"}}   
+    else:
+        response.status_code = 200
+        return cursor1
