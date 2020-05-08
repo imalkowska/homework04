@@ -136,12 +136,32 @@ async def customer_put(response: Response, customer_id: int, customer: Customer)
 # Zadanie 5
 
 
+# @app.get("/sales")
+# async def sales_get(response: Response, category: str):
+#     if category!="customers":
+#         response.status_code = 404
+#         return {"detail":{"error": "Błędne dane"}}   
+#     else:
+#         app.db_connection.row_factory =  sqlite3.Row
+#         cursor1 = app.db_connection.execute(f"""select c.CustomerId, c.Email, c.Phone, round(sum(t.UnitPrice),2) as "Sum"
+# from customers c
+# inner join invoices i using(customerid)
+# inner join invoice_items it using(invoiceid)
+# inner join tracks t using(trackid)
+# group by 1,2,3
+# order by 4 desc, 1 asc""").fetchall()
+#         response.status_code = 200
+#         return cursor1
+
+
+
+
+# Zadanie 6
+
+
 @app.get("/sales")
 async def sales_get(response: Response, category: str):
-    if category!="customers":
-        response.status_code = 404
-        return {"detail":{"error": "Błędne dane"}}   
-    else:
+    if category=="customers":
         app.db_connection.row_factory =  sqlite3.Row
         cursor1 = app.db_connection.execute(f"""select c.CustomerId, c.Email, c.Phone, round(sum(t.UnitPrice),2) as "Sum"
 from customers c
@@ -149,8 +169,19 @@ inner join invoices i using(customerid)
 inner join invoice_items it using(invoiceid)
 inner join tracks t using(trackid)
 group by 1,2,3
-order by 4 desc, 1 asc""").fetchall()
+order by 4 desc, 1""").fetchall()
         response.status_code = 200
         return cursor1
-
-
+    if category=="genres":
+        app.db_connection.row_factory =  sqlite3.Row
+        cursor2 = app.db_connection.execute(f"""select g.Name, sum(it.Quantity) as "Sum"
+from genres g 
+inner join tracks t using(genreid)
+inner join invoice_items it using(trackid)
+group by 1
+order by 2 desc, 1""").fetchall()
+        response.status_code = 200
+        return cursor2
+    else:
+        response.status_code = 404
+        return {"detail":{"error": "Błędne dane"}}  
