@@ -74,9 +74,9 @@ async def album_add(response: Response, album: Album):
         app.db_connection.commit()
         response.status_code = 201
         return {
-            "album_id": cursor.lastrowid,
-            "title": album.title,
-            "artist_id": album.artist_id
+            "AlbumId": cursor.lastrowid,
+            "Title": album.title,
+            "ArtistId": album.artist_id
         }
 
 
