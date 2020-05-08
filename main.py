@@ -3,11 +3,22 @@ import sqlite3
 
 from fastapi import FastAPI, Response
 from pydantic import BaseModel
+from fastapi.encoders import jsonable_encoder
 
 
 class Album(BaseModel):
     title: str
     artist_id: int
+
+
+class Customer(BaseModel):
+    Company: str = None
+    Address: str = None
+    City: str = None
+    State: str = None
+    Country: str = None
+    PostalCode: str = None
+    Fax: str = None
 
 
 
@@ -50,7 +61,7 @@ async def get_tracks(page:int = 0, per_page:int = 10):
 
 @app.get("/tracks/composers/")
 async def get_composers(response: Response, composer_name:str):
-    app.db_connection.row_factory =  lambda cursor, x: x[0]
+    app.db_connection.row_factory = lambda cursor, x: x[0]
     composers = app.db_connection.execute(f"select Name from tracks t where Composer = '{composer_name}' order by 1").fetchall()
     if composers!=[]:
         return composers
@@ -91,3 +102,30 @@ async def album_get(response: Response, album_id:int):
     else:
         response.status_code = 200
         return cursor1
+
+
+# Zadanie 4
+
+@app.put("/customers/{customer_id}")
+async def customer_put(response: Response, customer_id: int, customer: Customer):
+    app.db_connection.row_factory =  sqlite3.Row
+    cursor1 = app.db_connection.execute(f"select company, address, city, state, country, postalcode, fax from customers where customerid = {customer_id}").fetchone()
+    if cursor1 is None:
+        response.status_code = 404
+        return {"detail":{"error": "Brak klienta"}}   
+    else:
+        response.status_code = 200
+        customer_model = Customer(**cursor1)
+        update_data = customer.dict(exclude_unset = True)
+        updated_customer = customer_model.copy(update = update_data)
+        cursor2 = app.db_connection.execute(
+        	"""UPDATE customers SET Company = ?, Address = ?, City = ?, State = ?, Country = ?, PostalCode = ?, Fax = ? WHERE CustomerId = ?""", 
+            (updated_customer.Company, updated_customer.Address, updated_customer.City, updated_customer.State, updated_customer.Country, updated_customer.PostalCode, updated_customer.Fax, customer_id))
+        app.db_connection.commit()
+
+        app.db_connection.row_factory = sqlite3.Row
+        cursor3 = app.db_connection.execute(
+        """SELECT *
+         FROM customers WHERE CustomerId = ?""",
+        (customer_id, )).fetchone()
+        return cursor3
