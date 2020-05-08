@@ -12,13 +12,13 @@ class Album(BaseModel):
 
 
 class Customer(BaseModel):
-    Company: str = None
-    Address: str = None
-    City: str = None
-    State: str = None
-    Country: str = None
-    PostalCode: str = None
-    Fax: str = None
+    company: str = None
+    address: str = None
+    city: str = None
+    state: str = None
+    country: str = None
+    postalcode: str = None
+    fax: str = None
 
 
 
@@ -109,7 +109,7 @@ async def album_get(response: Response, album_id:int):
 @app.put("/customers/{customer_id}")
 async def customer_put(response: Response, customer_id: int, customer: Customer):
     app.db_connection.row_factory =  sqlite3.Row
-    cursor1 = app.db_connection.execute(f"select company, address, city, state, country, postalcode, fax from customers where customerid = {customer_id}").fetchone()
+    cursor1 = app.db_connection.execute(f'select company as "company", address as "address", city as "city", state as "state", country as "country", postalcode as "postalcode", fax as "fax" from customers where customerid = {customer_id}').fetchone()
     if cursor1 is None:
         response.status_code = 404
         return {"detail":{"error": "Brak klienta"}}   
@@ -120,7 +120,7 @@ async def customer_put(response: Response, customer_id: int, customer: Customer)
         updated_customer = customer_model.copy(update = update_data)
         cursor2 = app.db_connection.execute(
         	"""UPDATE customers SET Company = ?, Address = ?, City = ?, State = ?, Country = ?, PostalCode = ?, Fax = ? WHERE CustomerId = ?""", 
-            (updated_customer.Company, updated_customer.Address, updated_customer.City, updated_customer.State, updated_customer.Country, updated_customer.PostalCode, updated_customer.Fax, customer_id))
+            (updated_customer.company, updated_customer.address, updated_customer.city, updated_customer.state, updated_customer.country, updated_customer.postalcode, updated_customer.fax, customer_id))
         app.db_connection.commit()
 
         app.db_connection.row_factory = sqlite3.Row
